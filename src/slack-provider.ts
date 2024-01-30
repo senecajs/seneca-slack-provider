@@ -101,7 +101,7 @@ function SlackProvider(this: any, options: SlackProviderOptions) {
       id: String,
       text: String
     },
-    async function(this: any, msg: any) {
+    async function postMessage(this: any, msg: any) {
       const id = msg.id || throw_error('Please, provide the channel id')
       const { chat } = this.shared.sdk
       let result = await chat.postMessage({ channel: id, text: msg.text })

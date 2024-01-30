@@ -97,7 +97,7 @@ $ npm install @seneca/slack-provider @seneca/env
 
 ### &laquo; `"action":"postMessage","service":"slack"` &raquo;
 
-No description provided.
+Send a Slack message in a channel
 
 
 #### Parameters
@@ -105,6 +105,16 @@ No description provided.
 
 * _id_ : [Function: String]
 * _text_ : [Function: String]
+
+
+
+
+#### Replies With
+
+
+```
+{}
+```
 
 
 ----------

@@ -6,6 +6,11 @@ const messages = {
   get_info: {
     desc: 'Get information about the Slack SDK.',
   },
+  postMessage: {
+    desc: 'Send a Slack message in a channel',
+    examples: {},
+    reply_desc: {}
+  },
   
   list_conversation: {
     desc: 'List conversation data into an entity.',
