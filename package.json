@@ -46,13 +46,15 @@
     "@seneca/provider": ">=2.0",
     "seneca": ">=3",
     "seneca-entity": ">=25",
-    "seneca-promisify": ">=3"
+    "seneca-promisify": ">=3",
+    "@slack/web-api": ">=7"
   },
   "devDependencies": {
     "@seneca/doc": "^6.0.0",
     "@seneca/maintain": "0.0.28",
     "@seneca/env": ">=0.2",
     "@seneca/provider": "2.0.1",
+    "@slack/web-api": "^7.0.1",
     "@types/jest": "^29.4.0",
     "@types/node": "^18.13.0",
     "esbuild": "^0.17.7",
