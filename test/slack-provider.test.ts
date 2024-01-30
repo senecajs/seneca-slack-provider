@@ -8,6 +8,8 @@ import * as Fs from 'fs'
 const Seneca = require('seneca')
 const SenecaMsgTest = require('seneca-msg-test')
 
+const { Maintain } = require('@seneca/maintain')
+
 import SlackProvider from '../src/slack-provider'
 import SlackProviderDoc from '../src/SlackProvider-doc'
 
@@ -36,7 +38,8 @@ describe('slack-provider', () => {
       })
   })
 
-
+  test('maintain', Maintain)
+  
   test('messages', async () => {
     const seneca = await makeSeneca()
     await (SenecaMsgTest(seneca, BasicMessages)())
