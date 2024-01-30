@@ -3,16 +3,16 @@
 
 const Pkg = require('../package.json')
 
+const { WebClient } = require("@slack/web-api")
 
-type TangocardProviderOptions = {
-  url: string
-  fetch: any
+
+type SlackProviderOptions = {
   entity: Record<string, any>
   debug: boolean
 }
 
 
-function TangocardProvider(this: any, options: TangocardProviderOptions) {
+function SlackProvider(this: any, options: SlackProviderOptions) {
   const seneca: any = this
 
   const makeUtils = this.export('provider/makeUtils')
@@ -23,13 +23,12 @@ function TangocardProvider(this: any, options: TangocardProviderOptions) {
     postJSON,
     entityBuilder
   } = makeUtils({
-    name: 'tangocard',
-    url: options.url,
+    name: 'slack',
   })
 
 
   seneca
-    .message('sys:provider,provider:tangocard,get:info', get_info)
+    .message('sys:provider,provider:slack,get:info', get_info)
 
 
   const makeConfig = (config?: any) => seneca.util.deep({
@@ -37,13 +36,15 @@ function TangocardProvider(this: any, options: TangocardProviderOptions) {
       ...seneca.shared.headers
     }
   }, config)
-
-
-
+  
+  function throw_error(message: string = "") {
+    throw new Error(message)
+  }
+  
   async function get_info(this: any, _msg: any) {
     return {
       ok: true,
-      name: 'tangocard',
+      name: 'slack',
       version: Pkg.version,
     }
   }
@@ -51,131 +52,98 @@ function TangocardProvider(this: any, options: TangocardProviderOptions) {
 
   entityBuilder(this, {
     provider: {
-      name: 'tangocard'
+      name: 'slack'
     },
     entity: {
-      customer: {
+      channel: {
         cmd: {
           list: {
             action: async function(this: any, entize: any, msg: any) {
-              let json: any =
-                await getJSON(makeUrl('customers', msg.q), makeConfig())
-              let customers = json
-              let list = customers.map((data: any) => entize(data))
-              return list
-            },
-          }
-        }
-      },
-      brand: {
-        cmd: {
-          list: {
-            action: async function(this: any, entize: any, msg: any) {
-              let json: any =
-                await getJSON(makeUrl('catalogs', msg.q), makeConfig())
-              let brands = json.brands
-              let list = brands.map((data: any) => entize(data))
-              return list
-            },
-          }
-        }
-      },
-      order: {
-        cmd: {
-          list: {
-            action: async function(this: any, entize: any, msg: any) {
-              let json: any =
-                await getJSON(makeUrl('orders', msg.q), makeConfig())
-              let orders = json.orders
-              let list = orders.map((data: any) => entize(data))
-
-              // TODO: ensure seneca-transport preserves array props
-              list.page = json.page
-
+              let list = await this.shared.sdk.conversations.list()
+              list = list.channels.map((data: any) => entize(data))
               return list
             },
           },
-          save: {
+        }
+      },
+      conversation: {
+        cmd: {
+          list: {
             action: async function(this: any, entize: any, msg: any) {
-              let body = this.util.deep(
-                this.shared.primary,
-                options.entity.order.save,
-                msg.ent.data$(false)
-              )
-
-              let json: any =
-                await postJSON(makeUrl('orders', msg.q), makeConfig({
-                  body
-                }))
-
-              let order = json
-              order.id = order.referenceOrderID
-              return entize(order)
+              let q = msg.q || {}
+              let channel_id = q.id || throw_error('Please, provide the channel id')
+              let sortkey: any = null != typeof q.sort$
+                && 1 == Object.keys(q.sort$ || {}).length
+                && Object.keys(q.sort$)[0]
+              
+              let list: any = await this.shared.sdk.conversations.history({ channel: channel_id })
+              if (list.ok) {
+                const { messages }: any = list
+                if (false !== sortkey) {
+                    list.messages = q.sort$[sortkey] === -1 ?
+                      messages.sort((a: any, b: any) => b[sortkey] - a[sortkey]) :
+                      messages.sort((a: any, b: any) => a[sortkey] - b[sortkey])
+                }
+                list = list.messages.map((data: any) => entize(data))
+              }
+              
+              return list
             },
-          }
+          },
         }
       }
     }
   })
-
-
+  
+  seneca.message(
+    'service:slack,action:postMessage',
+    {
+      id: String,
+      text: String
+    },
+    async function(this: any, msg: any) {
+      const { chat } = this.shared.sdk
+      let result = await chat.postMessage({ channel: msg.id, text: msg.text })
+      return result
+    }
+  )
 
   seneca.prepare(async function(this: any) {
     let res =
-      await this.post('sys:provider,get:keymap,provider:tangocard')
+      await this.post('sys:provider,get:keymap,provider:slack')
 
     if (!res.ok) {
       throw this.fail('keymap')
     }
 
-    let src = res.keymap.name.value + ':' + res.keymap.key.value
-    let auth = Buffer.from(src).toString('base64')
-
-    this.shared.headers = {
-      Authorization: 'Basic ' + auth
-    }
-
-    this.shared.primary = {
-      customerIdentifier: res.keymap.cust.value,
-      accountIdentifier: res.keymap.acc.value,
-    }
+    let token = res.keymap.token.value
+    this.shared.sdk = new WebClient(token)
 
   })
 
 
   return {
     exports: {
+      sdk: () => this.shared.sdk,
     }
   }
 }
 
 
 // Default options.
-const defaults: TangocardProviderOptions = {
+const defaults: SlackProviderOptions = {
 
-  // NOTE: include trailing /
-  url: 'https://integration-api.tangocard.com/raas/v2/',
-
-  // Use global fetch by default - if exists
-  fetch: ('undefined' === typeof fetch ? undefined : fetch),
-
-  entity: {
-    order: {
-      save: {
-        // Default fields
-      }
-    }
-  },
+  entity: {},
 
   // TODO: Enable debug logging
   debug: false
 }
 
 
-Object.assign(TangocardProvider, { defaults })
+Object.assign(SlackProvider, { defaults })
 
-export default TangocardProvider
+export default SlackProvider
 
 if ('undefined' !== typeof (module)) {
-  module.exports = TangocardProvider
+  module.exports = SlackProvider
 }

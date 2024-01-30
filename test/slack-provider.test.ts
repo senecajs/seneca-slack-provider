@@ -8,8 +8,8 @@ import * as Fs from 'fs'
 const Seneca = require('seneca')
 const SenecaMsgTest = require('seneca-msg-test')
 
-import TangocardProvider from '../src/tangocard-provider'
-import TangocardProviderDoc from '../src/TangocardProvider-doc'
+import SlackProvider from '../src/slack-provider'
+import SlackProviderDoc from '../src/SlackProvider-doc'
 
 const BasicMessages = require('./basic.messages.js')
 
@@ -21,18 +21,18 @@ if (Fs.existsSync(__dirname + '/local-config.js')) {
 }
 
 
-describe('tangocard-provider', () => {
+describe('slack-provider', () => {
 
   test('happy', async () => {
-    expect(TangocardProvider).toBeDefined()
-    expect(TangocardProviderDoc).toBeDefined()
+    expect(SlackProvider).toBeDefined()
+    expect(SlackProviderDoc).toBeDefined()
 
     const seneca = await makeSeneca()
 
-    expect(await seneca.post('sys:provider,provider:tangocard,get:info'))
+    expect(await seneca.post('sys:provider,provider:slack,get:info'))
       .toMatchObject({
         ok: true,
-        name: 'tangocard',
+        name: 'slack',
       })
   })
 
@@ -43,13 +43,39 @@ describe('tangocard-provider', () => {
   })
 
 
-  test('list-brand', async () => {
+  test('list-channel', async () => {
     if (!Config) return;
     const seneca = await makeSeneca()
+    const list = await seneca.entity("provider/slack/channel").list$()
+    
+    expect(list.length > 0).toBeTruthy()
+  })
+  
+  test('list-conversation, post-message', async () => {
+    if (!Config) return;
+    const seneca = await makeSeneca()
+    
+    const text = 'bot interacted ' + Math.random()
+    
 
-    const list = await seneca.entity("provider/tangocard/brand").list$()
-    // console.log('BRANDS', list)
-
+    const channel_list = await seneca.entity("provider/slack/channel").list$()
+    
+    let res = await seneca.post('service:slack,action:postMessage', { 
+      id: channel_list[2].id,
+      text,
+    })
+    
+    const list = await seneca.entity("provider/slack/conversation").list$(
+      { id: channel_list[2].id, sort$: { ts: 1 } }
+    )
+    
+    expect(
+      res.message.text === text &&
+      list[list.length-1].text === text
+    ).toBeTruthy()
+    
+    // console.log('LIST: ', list)
+    
     expect(list.length > 0).toBeTruthy()
   })
 
@@ -65,25 +91,19 @@ async function makeSeneca() {
       // debug: true,
       file: [__dirname + '/local-env.js;?'],
       var: {
-        $TANGOCARD_KEY: String,
-        $TANGOCARD_NAME: String,
-        $TANGOCARD_CUSTID: String,
-        $TANGOCARD_ACCID: String,
+        $SLACK_TOKEN: String,
       }
     })
     .use('provider', {
       provider: {
-        tangocard: {
+        slack: {
           keys: {
-            key: { value: '$TANGOCARD_KEY' },
-            name: { value: '$TANGOCARD_NAME' },
-            cust: { value: '$TANGOCARD_CUSTID' },
-            acc: { value: '$TANGOCARD_ACCID' },
+            token: { value: '$SLACK_TOKEN' },
           }
         }
       }
     })
-    .use(TangocardProvider, {
+    .use(SlackProvider, {
       // fetch: Fetch,
     })
 
