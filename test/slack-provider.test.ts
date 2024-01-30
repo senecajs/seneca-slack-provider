@@ -1,8 +1,6 @@
-/* Copyright © 2022 Seneca Project Contributors, MIT License. */
+/* Copyright © 2024 Seneca Project Contributors, MIT License. */
 
 import * as Fs from 'fs'
-
-// const Fetch = require('node-fetch')
 
 
 const Seneca = require('seneca')
