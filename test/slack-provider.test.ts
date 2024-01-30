@@ -103,9 +103,7 @@ async function makeSeneca() {
         }
       }
     })
-    .use(SlackProvider, {
-      // fetch: Fetch,
-    })
+    .use(SlackProvider, {})
 
   return seneca.ready()
 }
