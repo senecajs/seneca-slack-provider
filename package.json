@@ -51,7 +51,7 @@
   },
   "devDependencies": {
     "@seneca/doc": "^6.0.0",
-    "@seneca/maintain": "0.0.28",
+    "@seneca/maintain": "0.1.0",
     "@seneca/env": ">=0.2",
     "@seneca/provider": "2.0.1",
     "@slack/web-api": "^7.0.1",
