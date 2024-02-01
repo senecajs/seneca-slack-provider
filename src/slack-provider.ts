@@ -64,6 +64,17 @@ function SlackProvider(this: any, options: SlackProviderOptions) {
               return list
             },
           },
+          load: {
+            action: async function(this: any, entize: any, msg: any) {
+              let ent = msg.ent || {}
+              let q = msg.q || {}
+              let id = null == q.id ? ( null == ent ? null : ent.id ) : q.id
+              let { channel } = await this.shared.sdk.conversations.info({
+                channel: id,
+              })
+              return entize(channel)
+            },
+          },
         }
       },
       conversation: {

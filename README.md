@@ -53,7 +53,12 @@ Seneca()
 let conversation = await seneca.entity('provider/slack/conversation')
   .list$({ id: '<slack-channel-id>' })
 
+// get details of a channel
+let channel = await seneca.entity('provider/slack/channel')
+  .load$('<slack-channel-id>')
+
 Console.log('CONVERSATION', conversation)
+
 
 ```
 
@@ -85,6 +90,7 @@ $ npm install @seneca/slack-provider @seneca/env
 * ["action":"postMessage","service":"slack"](#-actionpostMessageserviceslack-)
 * ["sys":"entity","base":"slack","cmd":"list","name":"channel","zone":"provider"](#-sysentitybaseslackcmdlistnamechannelzoneprovider-)
 * ["sys":"entity","base":"slack","cmd":"list","name":"conversation","zone":"provider"](#-sysentitybaseslackcmdlistnameconversationzoneprovider-)
+* ["sys":"entity","base":"slack","cmd":"load","name":"channel","zone":"provider"](#-sysentitybaseslackcmdloadnamechannelzoneprovider-)
 * ["sys":"provider","get":"info","provider":"slack"](#-sysprovidergetinfoproviderslack-)
 
 
@@ -138,6 +144,23 @@ List channel data into an entity.
 ### &laquo; `"sys":"entity","base":"slack","cmd":"list","name":"conversation","zone":"provider"` &raquo;
 
 List conversation data into an entity.
+
+
+
+
+
+#### Replies With
+
+
+```
+{}
+```
+
+
+----------
+### &laquo; `"sys":"entity","base":"slack","cmd":"load","name":"channel","zone":"provider"` &raquo;
+
+Load channel data into an entity.
 
 
 

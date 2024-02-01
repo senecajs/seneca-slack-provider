@@ -18,6 +18,11 @@ const messages = {
     reply_desc: {}
   },
   
+  load_channel: {
+    desc: 'Load channel data into an entity.',
+    examples: {},
+    reply_desc: {}
+  },
   list_channel: {
     desc: 'List channel data into an entity.',
     examples: {},

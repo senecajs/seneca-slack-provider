@@ -44,10 +44,14 @@ describe('slack-provider', () => {
   })
 
 
-  test('list-channel', async () => {
+  test('list-channel, load-channel', async () => {
     if (!Config) return;
     const seneca = await makeSeneca()
     const list = await seneca.entity("provider/slack/channel").list$()
+
+    const load0 = await seneca.entity("provider/slack/channel").load$(list[0].id)
+
+    expect(load0.id).toEqual(list[0].id)
     
     expect(list.length > 0).toBeTruthy()
   })
